@@ -3,142 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bataille de l'IA - Dashboard Amphi Ultra</title>
+    <title>Bataille de l'IA - Dashboard</title>
+    <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <style>
-        :root {
-            --bg: #0d0d12;
-            --panel: #1a1a24;
-            --accent: #00d2ff;
-            --timeline: #f39c12;
-            --enjeux: #e74c3c;
-            --scen: #9b59b6;
-            --danger: #ff4757;
-            --text: #e0e0e0;
-        }
-
-        body { 
-            margin: 0; background: var(--bg); color: var(--text); 
-            font-family: 'Inter', system-ui, sans-serif;
-            overflow: hidden; height: 100vh; width: 100vw;
-        }
-
-        /* NAVIGATION MINI */
-        nav {
-            position: fixed; left: 0; top: 0; bottom: 0; width: 50px;
-            background: rgba(0,0,0,0.9); backdrop-filter: blur(10px);
-            display: flex; flex-direction: column; z-index: 1000;
-            border-right: 1px solid rgba(255,255,255,0.1);
-            transition: width 0.3s;
-        }
-        nav:hover { width: 160px; }
-        nav button {
-            background: transparent; border: none; color: #777; cursor: pointer;
-            padding: 25px 15px; text-align: left; width: 100%;
-            display: flex; align-items: center; gap: 15px; transition: 0.2s;
-            font-size: 1.2rem;
-        }
-        nav button:hover { color: var(--accent); background: rgba(255,255,255,0.05); }
-        nav span { display: none; font-size: 1rem; font-weight: bold; }
-        nav:hover span { display: inline; }
-
-        main { margin-left: 50px; height: 100vh; width: calc(100vw - 50px); position: relative; }
-        
-        .screen {
-            position: absolute; inset: 0; display: none;
-            padding: 2vh; flex-direction: column; align-items: center; justify-content: space-evenly;
-        }
-        .screen.active { display: flex; }
-
-        /* CARTES ADAPTATIVES (Scaling intelligent) */
-        .flip-container {
-            perspective: 1500px; 
-            width: 25vw; height: 70vh; /* Taille max pour Enjeux/Scénarios */
-            max-width: 450px; max-height: 650px;
-            cursor: pointer;
-        }
-        .flipper {
-            position: relative; width: 100%; height: 100%;
-            transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
-            transform-style: preserve-3d;
-        }
-        .flipped .flipper { transform: rotateY(180deg); }
-
-        .card-face {
-            position: absolute; width: 100%; height: 100%;
-            backface-visibility: hidden; border-radius: 20px;
-            background-size: contain; background-repeat: no-repeat; background-position: center;
-            background-color: var(--panel);
-            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        .card-back { transform: rotateY(180deg); }
-
-        /* TIMELINE - OCCUPATION MAXIMALE */
-        #timeline-row { 
-            display: flex; gap: 1.5vw; width: 95%; height: 55vh; 
-            justify-content: center; align-items: center; 
-        }
-        .drop-zone {
-            flex: 1; height: 100%; max-width: 280px;
-            border: 3px dashed #333; border-radius: 15px; 
-            display: flex; align-items: center; justify-content: center;
-            transition: all 0.3s ease; position: relative;
-        }
-        .drop-zone.drag-over { border-color: var(--accent); background: rgba(0, 210, 255, 0.15); transform: scale(1.02); }
-
-        .timeline-card {
-            width: 95%; height: 95%; cursor: grab;
-            transform-style: preserve-3d; transition: transform 0.5s ease;
-        }
-        .timeline-card:hover { transform: scale(1.03); z-index: 10; }
-        .timeline-card.flipped { transform: rotateY(180deg); }
-
-        /* ZONE PIOCHE PLUS LARGE */
-        #draw-area {
-            width: 100%; display: flex; flex-direction: column; align-items: center; gap: 2vh;
-        }
-        #temp-card-slot {
-            width: 18vw; height: 26vh; max-width: 180px; max-height: 250px;
-            border: 2px solid #222; border-radius: 12px;
-            display: flex; align-items: center; justify-content: center;
-            background: rgba(255,255,255,0.02);
-        }
-
-        /* TRASH */
-        #trash-zone {
-            position: absolute; bottom: 3vh; right: 3vw;
-            width: 100px; height: 100px; border-radius: 50%;
-            background: rgba(231, 76, 60, 0.1); border: 3px solid var(--danger);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 3rem; transition: 0.3s; opacity: 0.4;
-        }
-        #trash-zone.drag-over { transform: scale(1.3); background: var(--danger); opacity: 1; color: white; }
-
-        .btn-draw {
-            background: var(--accent); color: var(--bg); border: none;
-            padding: 20px 40px; border-radius: 10px; font-weight: 900;
-            cursor: pointer; text-transform: uppercase; font-size: 1.2rem;
-            box-shadow: 0 10px 30px rgba(0,210,255,0.2);
-        }
-        .btn-draw:disabled { background: #333; color: #555; box-shadow: none; }
-        
-        h1 { font-size: 3.5vh; margin: 0; text-transform: uppercase; letter-spacing: 2px; }
-    </style>
 </head>
 <body>
 
-<nav>
-    <button onclick="go('intro')">🏠 <span>ACCUEIL</span></button>
-    <button onclick="go('time')">📅 <span>TIMELINE</span></button>
-    <button onclick="go('enjeu')">⚡ <span>ENJEUX</span></button>
-    <button onclick="go('scen')">🎬 <span>SCÉNARIOS</span></button>
+<nav id="main-nav">
+    <button onclick="UI.go('intro')">🏠 <span>ACCUEIL</span></button>
+    <button onclick="UI.go('time')">📅 <span>TIMELINE</span></button>
+    <button onclick="UI.go('enjeu')">⚡ <span>ENJEUX</span></button>
+    <button onclick="UI.go('scen')">🎬 <span>SCÉNARIOS</span></button>
+    <hr>
+    <button id="wooclap-btn" onclick="window.open('https://app.wooclap.com/VOTRE_CODE', '_blank')">🗳️ <span>VOTE LIVE</span></button>
 </nav>
 
 <main>
     <section id="intro" class="screen active">
         <h1>Bataille de l'IA</h1>
-        <div class="flip-container" style="height: 75vh;" onclick="this.classList.toggle('flipped')">
+        <div class="flip-container main-card" onclick="this.classList.toggle('flipped')">
             <div class="flipper">
                 <div class="card-face card-front" style="background-image: url('0_Lancement/carte_000.jpg')"></div>
                 <div class="card-face card-back" style="background-image: url('0_Lancement/carte_001.jpg')"></div>
@@ -147,7 +30,7 @@
     </section>
 
     <section id="time" class="screen">
-        <h1 style="color: var(--timeline)">Timeline Master</h1>
+        <h1 class="title-time">Chronologie Interactive</h1>
         <div id="timeline-row">
             <div class="drop-zone" id="dz-1"></div>
             <div class="drop-zone" id="dz-2"></div>
@@ -155,111 +38,36 @@
             <div class="drop-zone" id="dz-4"></div>
             <div class="drop-zone" id="dz-5"></div>
         </div>
-
         <div id="draw-area">
-            <div id="temp-card-slot"></div>
-            <button id="btn-draw-time" class="btn-draw" onclick="drawTimeline()">Piocher un événement</button>
+            <div id="temp-card-slot" class="drop-zone"></div>
+            <button id="btn-draw-time" class="btn-draw" onclick="Game.drawTimeline()">Piocher un événement</button>
         </div>
-
         <div id="trash-zone">🗑️</div>
     </section>
 
     <section id="enjeu" class="screen">
-        <h1 style="color: var(--enjeux)">Cartographie des Enjeux</h1>
+        <h1 class="title-enjeux">Enjeux de l'IA</h1>
         <div id="enjeu-card" class="flip-container" onclick="this.classList.toggle('flipped')">
             <div class="flipper">
                 <div id="enjeu-front" class="card-face card-front"></div>
                 <div id="enjeu-back" class="card-face card-back"></div>
             </div>
         </div>
-        <button class="btn-draw" onclick="drawRandom('enjeu')">Piocher un Enjeu</button>
+        <button class="btn-draw" onclick="Game.drawRandom('enjeu')">Piocher un Enjeu</button>
     </section>
 
     <section id="scen" class="screen">
-        <h1 style="color: var(--scen)">Scénario de Crise</h1>
+        <h1 class="title-scen">Scénario de Crise</h1>
         <div id="scen-card" class="flip-container" onclick="this.classList.toggle('flipped')">
             <div class="flipper">
                 <div id="scen-front" class="card-face card-front"></div>
                 <div id="scen-back" class="card-face card-back"></div>
             </div>
         </div>
-        <button class="btn-draw" onclick="drawRandom('scen')">Nouveau Scénario</button>
+        <button class="btn-draw" onclick="Game.drawRandom('scen')">Nouveau Scénario</button>
     </section>
 </main>
 
-<script>
-    const CONFIG = {
-        timeline: { path: '1_Timeline', start: 4, end: 49 },
-        enjeu:    { path: '2_Enjeux',   start: 50, end: 85 },
-        scen:     { path: '4_Scénarios', start: 120, end: 139 }
-    };
-
-    const pad = (n) => String(n).padStart(3, '0');
-    let cardIdCounter = 0;
-
-    function go(id) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        gsap.fromTo(`#${id} h1`, { y: -20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5 });
-    }
-
-    function drawTimeline() {
-        const slot = document.getElementById('temp-card-slot');
-        if(slot.children.length > 0) return;
-
-        const cfg = CONFIG.timeline;
-        let rand = Math.floor(Math.random() * (cfg.end - cfg.start + 1)) + cfg.start;
-        if (rand % 2 !== 0) rand--; 
-
-        cardIdCounter++;
-        const id = `card-${cardIdCounter}`;
-        const card = document.createElement('div');
-        card.id = id; card.className = 'timeline-card'; card.draggable = true;
-        card.innerHTML = `
-            <div class="flipper" style="width:100%; height:100%; pointer-events:none;">
-                <div class="card-face card-front" style="background-image: url('${cfg.path}/carte_${pad(rand)}.jpg')"></div>
-                <div class="card-face card-back" style="background-image: url('${cfg.path}/carte_${pad(rand+1)}.jpg')"></div>
-            </div>
-        `;
-        card.ondragstart = (e) => e.dataTransfer.setData("textID", e.target.id);
-        card.onclick = () => card.parentElement.classList.contains('drop-zone') && card.classList.toggle('flipped');
-        
-        slot.appendChild(card);
-        gsap.from(card, { scale: 0, duration: 0.4, ease: "back.out(1.7)" });
-        document.getElementById('btn-draw-time').disabled = true;
-    }
-
-    document.querySelectorAll('.drop-zone, #trash-zone, #temp-card-slot').forEach(zone => {
-        zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('drag-over'); });
-        zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
-        zone.addEventListener('drop', (e) => {
-            e.preventDefault(); zone.classList.remove('drag-over');
-            const card = document.getElementById(e.dataTransfer.getData("textID"));
-            if(!card) return;
-
-            if(zone.id === 'trash-zone') {
-                gsap.to(card, { scale: 0, opacity: 0, duration: 0.3, onComplete: () => { card.remove(); document.getElementById('btn-draw-time').disabled = (document.getElementById('temp-card-slot').children.length > 0); }});
-            } else {
-                if(zone.children.length > 0 && zone.id !== 'temp-card-slot') {
-                    document.getElementById('temp-card-slot').appendChild(zone.children[0]);
-                }
-                zone.appendChild(card);
-                document.getElementById('btn-draw-time').disabled = (document.getElementById('temp-card-slot').children.length > 0);
-            }
-        });
-    });
-
-    function drawRandom(type) {
-        const cfg = CONFIG[type];
-        const container = document.getElementById(`${type}-card`);
-        container.classList.remove('flipped');
-        let rand = Math.floor(Math.random() * (cfg.end - cfg.start + 1)) + cfg.start;
-        if (rand % 2 !== 0) rand--;
-        document.getElementById(`${type}-front`).style.backgroundImage = `url('${cfg.path}/carte_${pad(rand)}.jpg')`;
-        document.getElementById(`${type}-back`).style.backgroundImage = `url('${cfg.path}/carte_${pad(rand+1)}.jpg')`;
-        gsap.fromTo(container, { x: 200, opacity: 0, rotate: 10 }, { x: 0, opacity: 1, rotate: 0, duration: 0.6, ease: "power4.out" });
-    }
-</script>
-
+<script src="script.js"></script>
 </body>
 </html>
