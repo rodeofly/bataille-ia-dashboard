@@ -15,7 +15,7 @@
     <button onclick="UI.go('enjeu')">⚡ <span>ENJEUX</span></button>
     <button onclick="UI.go('scen')">🎬 <span>SCÉNARIOS</span></button>
     <hr>
-    <button id="wooclap-btn" onclick="window.open('https://app.wooclap.com/VOTRE_CODE', '_blank')">🗳️ <span>VOTE LIVE</span></button>
+    <button onclick="window.open('https://app.wooclap.com/VOTRE_CODE', '_blank')">🗳️ <span>VOTE LIVE</span></button>
 </nav>
 
 <main>
@@ -68,6 +68,77 @@
     </section>
 </main>
 
-<script src="script.js"></script>
+<script>
+// LOGIQUE DIRECTE POUR EVITER LES ERREURS DE FICHIER
+const CONFIG = {
+    timeline: { path: '1_Timeline', start: 4, end: 49 },
+    enjeu:    { path: '2_Enjeux',   start: 50, end: 85 },
+    scen:     { path: '4_Scénarios', start: 120, end: 139 }
+};
+
+const UI = {
+    go(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        const target = document.getElementById(id);
+        if(target) {
+            target.classList.add('active');
+            gsap.fromTo(target, { opacity: 0 }, { opacity: 1, duration: 0.5 });
+        }
+    },
+    pad: (n) => String(n).padStart(3, '0')
+};
+
+const Game = {
+    cardIdCounter: 0,
+    drawTimeline() {
+        const slot = document.getElementById('temp-card-slot');
+        if(slot.children.length > 0) return;
+        const cfg = CONFIG.timeline;
+        let rand = Math.floor(Math.random() * (cfg.end - cfg.start + 1)) + cfg.start;
+        if (rand % 2 !== 0) rand--; 
+        this.cardIdCounter++;
+        const id = `card-${this.cardIdCounter}`;
+        const card = document.createElement('div');
+        card.id = id; card.className = 'timeline-card'; card.draggable = true;
+        card.innerHTML = `<div class="flipper" style="width:100%; height:100%; pointer-events:none;"><div class="card-face card-front" style="background-image: url('${cfg.path}/carte_${UI.pad(rand)}.jpg')"></div><div class="card-face card-back" style="background-image: url('${cfg.path}/carte_${UI.pad(rand+1)}.jpg')"></div></div>`;
+        card.ondragstart = (e) => e.dataTransfer.setData("textID", e.target.id);
+        card.onclick = () => card.parentElement.classList.contains('drop-zone') && card.parentElement.id !== 'temp-card-slot' && card.classList.toggle('flipped');
+        slot.appendChild(card);
+        gsap.from(card, { scale: 0, rotate: -10, duration: 0.4 });
+        this.updateBtnState();
+    },
+    updateBtnState() {
+        document.getElementById('btn-draw-time').disabled = (document.getElementById('temp-card-slot').children.length > 0);
+    },
+    drawRandom(type) {
+        const cfg = CONFIG[type];
+        const container = document.getElementById(`${type}-card`);
+        container.classList.remove('flipped');
+        let rand = Math.floor(Math.random() * (cfg.end - cfg.start + 1)) + cfg.start;
+        if (rand % 2 !== 0) rand--;
+        document.getElementById(`${type}-front`).style.backgroundImage = `url('${cfg.path}/carte_${UI.pad(rand)}.jpg')`;
+        document.getElementById(`${type}-back`).style.backgroundImage = `url('${cfg.path}/carte_${UI.pad(rand+1)}.jpg')`;
+        gsap.fromTo(container, { x: 300, opacity: 0 }, { x: 0, opacity: 1, duration: 0.6, ease: "power3.out" });
+    }
+};
+
+// INIT DRAG & DROP
+document.querySelectorAll('.drop-zone, #trash-zone').forEach(zone => {
+    zone.ondragover = (e) => { e.preventDefault(); zone.classList.add('drag-over'); };
+    zone.ondragleave = () => zone.classList.remove('drag-over');
+    zone.ondrop = (e) => {
+        e.preventDefault(); zone.classList.remove('drag-over');
+        const card = document.getElementById(e.dataTransfer.getData("textID"));
+        if(!card) return;
+        if(zone.id === 'trash-zone') {
+            gsap.to(card, { scale: 0, opacity: 0, duration: 0.3, onComplete: () => { card.remove(); Game.updateBtnState(); }});
+        } else {
+            if(zone.children.length > 0 && zone.id !== 'temp-card-slot') document.getElementById('temp-card-slot').appendChild(zone.children[0]);
+            zone.appendChild(card);
+            Game.updateBtnState();
+        }
+    };
+});
+</script>
 </body>
 </html>
