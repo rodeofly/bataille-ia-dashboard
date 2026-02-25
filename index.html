@@ -121,32 +121,32 @@
             <div class="drop-zone" id="dz-5"></div>
         </div>
         <div style="display: flex; flex-direction: column; align-items: center; gap: 2vh;">
-            <div id="temp-card-slot" class="drop-zone" style="height: 200px; width: 150px;"></div>
+            <div id="temp-card-slot" class="drop-zone" style="height: 210px; width: 150px;"></div>
             <button id="btn-draw-time" class="btn-draw" onclick="Game.drawTimeline()">Piocher un événement</button>
         </div>
         <div id="trash-zone">🗑️</div>
     </section>
 
     <section id="enjeu" class="screen">
-        <h1>Enjeux de l'IA</h1>
+        <h1 style="color: var(--enjeux)">Enjeux de l'IA</h1>
         <div id="enjeu-card" class="flip-container" onclick="this.classList.toggle('flipped')">
             <div class="flipper">
                 <div id="enj-f" class="card-face"></div>
                 <div id="enj-b" class="card-face card-back"></div>
             </div>
         </div>
-        <button class="btn-draw" onclick="Game.drawRandom('enjeu')">Piocher un Enjeu</button>
+        <button class="btn-draw" style="margin-top: 20px;" onclick="Game.drawRandom('enjeu')">Piocher un Enjeu</button>
     </section>
 
     <section id="scen" class="screen">
-        <h1>Scénario de Crise</h1>
+        <h1 style="color: var(--scen)">Scénario de Crise</h1>
         <div id="scen-card" class="flip-container" onclick="this.classList.toggle('flipped')">
             <div class="flipper">
                 <div id="sce-f" class="card-face"></div>
                 <div id="sce-b" class="card-face card-back"></div>
             </div>
         </div>
-        <button class="btn-draw" onclick="Game.drawRandom('scen')">Nouveau Scénario</button>
+        <button class="btn-draw" style="margin-top: 20px;" onclick="Game.drawRandom('scen')">Nouveau Scénario</button>
     </section>
 </main>
 
@@ -160,8 +160,11 @@
     const UI = {
         go(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            gsap.fromTo(`#${id}`, { opacity: 0 }, { opacity: 1, duration: 0.5 });
+            const target = document.getElementById(id);
+            if(target) {
+                target.classList.add('active');
+                gsap.fromTo(target, { opacity: 0 }, { opacity: 1, duration: 0.5 });
+            }
         },
         pad: (n) => String(n).padStart(3, '0')
     };
@@ -181,7 +184,7 @@
             card.ondragstart = (e) => e.dataTransfer.setData("tID", e.target.id);
             card.onclick = () => card.parentElement.classList.contains('drop-zone') && card.parentElement.id !== 'temp-card-slot' && card.classList.toggle('flipped');
             slot.appendChild(card);
-            gsap.from(card, { scale: 0, rotate: -10, duration: 0.4 });
+            gsap.from(card, { scale: 0, rotation: -10, duration: 0.4 });
             document.getElementById('btn-draw-time').disabled = true;
         },
         drawRandom(type) {
