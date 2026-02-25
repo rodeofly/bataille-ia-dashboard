@@ -4,33 +4,73 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bataille de l'IA - Dashboard</title>
-    <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        :root {
+            --bg: #0d0d12; --panel: #1a1a24; --accent: #00d2ff;
+            --timeline: #f39c12; --enjeux: #e74c3c; --scen: #9b59b6;
+            --danger: #ff4757; --text: #e0e0e0;
+        }
+        body { 
+            margin: 0; background: var(--bg); color: var(--text); 
+            font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh;
+        }
+        nav {
+            position: fixed; left: 0; top: 0; bottom: 0; width: 55px;
+            background: rgba(0,0,0,0.9); backdrop-filter: blur(10px);
+            display: flex; flex-direction: column; z-index: 1000;
+            border-right: 1px solid rgba(255,255,255,0.1); transition: width 0.3s;
+        }
+        nav:hover { width: 170px; }
+        nav button {
+            background: transparent; border: none; color: #777; cursor: pointer;
+            padding: 25px 15px; text-align: left; width: 100%; display: flex; align-items: center; gap: 15px;
+        }
+        nav button:hover { color: var(--accent); background: rgba(255,255,255,0.05); }
+        nav span { display: none; font-size: 0.9rem; font-weight: bold; }
+        nav:hover span { display: inline; }
+        main { margin-left: 55px; height: 100vh; position: relative; }
+        .screen { position: absolute; inset: 0; display: none; padding: 3vh; flex-direction: column; align-items: center; justify-content: space-evenly; }
+        .active { display: flex; }
+        .flip-container { perspective: 1500px; width: 28vw; height: 72vh; max-width: 420px; max-height: 620px; cursor: pointer; }
+        .flipper { position: relative; width: 100%; height: 100%; transition: transform 0.7s; transform-style: preserve-3d; }
+        .flipped .flipper { transform: rotateY(180deg); }
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 25px; background-size: contain; background-repeat: no-repeat; background-position: center; background-color: var(--panel); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 25px 55px rgba(0,0,0,0.7); }
+        .card-back { transform: rotateY(180deg); }
+        #timeline-row { display: flex; gap: 1.2vw; width: 96%; height: 52vh; justify-content: center; }
+        .drop-zone { flex: 1; max-width: 260px; border: 3px dashed #2a2a35; border-radius: 20px; transition: 0.3s; }
+        .drag-over { border-color: var(--accent); background: rgba(0,210,255,0.1); transform: scale(1.03); }
+        .timeline-card { width: 100%; height: 100%; cursor: grab; transform-style: preserve-3d; transition: transform 0.4s; }
+        .timeline-card.flipped { transform: rotateY(180deg); }
+        .btn-draw { background: var(--accent); color: var(--bg); border: none; padding: 18px 35px; border-radius: 12px; font-weight: 900; cursor: pointer; font-size: 1.1rem; }
+        .btn-draw:disabled { background: #222; color: #444; cursor: not-allowed; }
+        #trash-zone { position: absolute; bottom: 4vh; right: 4vw; width: 90px; height: 90px; border-radius: 50%; border: 3px solid var(--danger); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; opacity: 0.3; }
+        h1 { font-size: 4vh; text-transform: uppercase; letter-spacing: 3px; margin: 0; }
+    </style>
 </head>
 <body>
 
-<nav id="main-nav">
+<nav>
     <button onclick="UI.go('intro')">🏠 <span>ACCUEIL</span></button>
     <button onclick="UI.go('time')">📅 <span>TIMELINE</span></button>
     <button onclick="UI.go('enjeu')">⚡ <span>ENJEUX</span></button>
     <button onclick="UI.go('scen')">🎬 <span>SCÉNARIOS</span></button>
-    <hr>
     <button onclick="window.open('https://app.wooclap.com/VOTRE_CODE', '_blank')">🗳️ <span>VOTE LIVE</span></button>
 </nav>
 
 <main>
     <section id="intro" class="screen active">
         <h1>Bataille de l'IA</h1>
-        <div class="flip-container main-card" onclick="this.classList.toggle('flipped')">
+        <div class="flip-container" onclick="this.classList.toggle('flipped')">
             <div class="flipper">
-                <div class="card-face card-front" style="background-image: url('0_Lancement/carte_000.jpg')"></div>
+                <div class="card-face" style="background-image: url('0_Lancement/carte_000.jpg')"></div>
                 <div class="card-face card-back" style="background-image: url('0_Lancement/carte_001.jpg')"></div>
             </div>
         </div>
     </section>
 
     <section id="time" class="screen">
-        <h1 class="title-time">Chronologie Interactive</h1>
+        <h1 style="color: var(--timeline)">Timeline Master</h1>
         <div id="timeline-row">
             <div class="drop-zone" id="dz-1"></div>
             <div class="drop-zone" id="dz-2"></div>
@@ -38,107 +78,90 @@
             <div class="drop-zone" id="dz-4"></div>
             <div class="drop-zone" id="dz-5"></div>
         </div>
-        <div id="draw-area">
-            <div id="temp-card-slot" class="drop-zone"></div>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 2vh;">
+            <div id="temp-card-slot" class="drop-zone" style="height: 200px; width: 150px;"></div>
             <button id="btn-draw-time" class="btn-draw" onclick="Game.drawTimeline()">Piocher un événement</button>
         </div>
         <div id="trash-zone">🗑️</div>
     </section>
 
     <section id="enjeu" class="screen">
-        <h1 class="title-enjeux">Enjeux de l'IA</h1>
+        <h1 style="color: var(--enjeux)">Enjeux</h1>
         <div id="enjeu-card" class="flip-container" onclick="this.classList.toggle('flipped')">
             <div class="flipper">
-                <div id="enjeu-front" class="card-face card-front"></div>
-                <div id="enjeu-back" class="card-face card-back"></div>
+                <div id="enj-f" class="card-face"></div>
+                <div id="enj-b" class="card-face card-back"></div>
             </div>
         </div>
-        <button class="btn-draw" onclick="Game.drawRandom('enjeu')">Piocher un Enjeu</button>
+        <button class="btn-draw" onclick="Game.drawRandom('enjeu')">Piocher</button>
     </section>
 
     <section id="scen" class="screen">
-        <h1 class="title-scen">Scénario de Crise</h1>
+        <h1 style="color: var(--scen)">Scénarios</h1>
         <div id="scen-card" class="flip-container" onclick="this.classList.toggle('flipped')">
             <div class="flipper">
-                <div id="scen-front" class="card-face card-front"></div>
-                <div id="scen-back" class="card-face card-back"></div>
+                <div id="sce-f" class="card-face"></div>
+                <div id="sce-b" class="card-face card-back"></div>
             </div>
         </div>
-        <button class="btn-draw" onclick="Game.drawRandom('scen')">Nouveau Scénario</button>
+        <button class="btn-draw" onclick="Game.drawRandom('scen')">Piocher</button>
     </section>
 </main>
 
 <script>
-// LOGIQUE DIRECTE POUR EVITER LES ERREURS DE FICHIER
-const CONFIG = {
-    timeline: { path: '1_Timeline', start: 4, end: 49 },
-    enjeu:    { path: '2_Enjeux',   start: 50, end: 85 },
-    scen:     { path: '4_Scénarios', start: 120, end: 139 }
-};
+    const CONFIG = {
+        timeline: { path: '1_Timeline', start: 4, end: 49 },
+        enjeu:    { path: '2_Enjeux',   start: 50, end: 85 },
+        scen:     { path: '4_Scénarios', start: 120, end: 139 }
+    };
 
-const UI = {
-    go(id) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        const target = document.getElementById(id);
-        if(target) {
-            target.classList.add('active');
-            gsap.fromTo(target, { opacity: 0 }, { opacity: 1, duration: 0.5 });
-        }
-    },
-    pad: (n) => String(n).padStart(3, '0')
-};
+    const UI = {
+        go(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        },
+        pad: (n) => String(n).padStart(3, '0')
+    };
 
-const Game = {
-    cardIdCounter: 0,
-    drawTimeline() {
-        const slot = document.getElementById('temp-card-slot');
-        if(slot.children.length > 0) return;
-        const cfg = CONFIG.timeline;
-        let rand = Math.floor(Math.random() * (cfg.end - cfg.start + 1)) + cfg.start;
-        if (rand % 2 !== 0) rand--; 
-        this.cardIdCounter++;
-        const id = `card-${this.cardIdCounter}`;
-        const card = document.createElement('div');
-        card.id = id; card.className = 'timeline-card'; card.draggable = true;
-        card.innerHTML = `<div class="flipper" style="width:100%; height:100%; pointer-events:none;"><div class="card-face card-front" style="background-image: url('${cfg.path}/carte_${UI.pad(rand)}.jpg')"></div><div class="card-face card-back" style="background-image: url('${cfg.path}/carte_${UI.pad(rand+1)}.jpg')"></div></div>`;
-        card.ondragstart = (e) => e.dataTransfer.setData("textID", e.target.id);
-        card.onclick = () => card.parentElement.classList.contains('drop-zone') && card.parentElement.id !== 'temp-card-slot' && card.classList.toggle('flipped');
-        slot.appendChild(card);
-        gsap.from(card, { scale: 0, rotate: -10, duration: 0.4 });
-        this.updateBtnState();
-    },
-    updateBtnState() {
-        document.getElementById('btn-draw-time').disabled = (document.getElementById('temp-card-slot').children.length > 0);
-    },
-    drawRandom(type) {
-        const cfg = CONFIG[type];
-        const container = document.getElementById(`${type}-card`);
-        container.classList.remove('flipped');
-        let rand = Math.floor(Math.random() * (cfg.end - cfg.start + 1)) + cfg.start;
-        if (rand % 2 !== 0) rand--;
-        document.getElementById(`${type}-front`).style.backgroundImage = `url('${cfg.path}/carte_${UI.pad(rand)}.jpg')`;
-        document.getElementById(`${type}-back`).style.backgroundImage = `url('${cfg.path}/carte_${UI.pad(rand+1)}.jpg')`;
-        gsap.fromTo(container, { x: 300, opacity: 0 }, { x: 0, opacity: 1, duration: 0.6, ease: "power3.out" });
-    }
-};
-
-// INIT DRAG & DROP
-document.querySelectorAll('.drop-zone, #trash-zone').forEach(zone => {
-    zone.ondragover = (e) => { e.preventDefault(); zone.classList.add('drag-over'); };
-    zone.ondragleave = () => zone.classList.remove('drag-over');
-    zone.ondrop = (e) => {
-        e.preventDefault(); zone.classList.remove('drag-over');
-        const card = document.getElementById(e.dataTransfer.getData("textID"));
-        if(!card) return;
-        if(zone.id === 'trash-zone') {
-            gsap.to(card, { scale: 0, opacity: 0, duration: 0.3, onComplete: () => { card.remove(); Game.updateBtnState(); }});
-        } else {
-            if(zone.children.length > 0 && zone.id !== 'temp-card-slot') document.getElementById('temp-card-slot').appendChild(zone.children[0]);
-            zone.appendChild(card);
-            Game.updateBtnState();
+    const Game = {
+        idCnt: 0,
+        drawTimeline() {
+            const slot = document.getElementById('temp-card-slot');
+            if(slot.children.length > 0) return;
+            const cfg = CONFIG.timeline;
+            let r = Math.floor(Math.random() * (cfg.end - cfg.start + 1)) + cfg.start;
+            if(r % 2 !== 0) r--;
+            this.idCnt++;
+            const card = document.createElement('div');
+            card.id = `c-${this.idCnt}`; card.className = 'timeline-card'; card.draggable = true;
+            card.innerHTML = `<div class="flipper" style="width:100%;height:100%;pointer-events:none;"><div class="card-face" style="background-image:url('${cfg.path}/carte_${UI.pad(r)}.jpg')"></div><div class="card-face card-back" style="background-image:url('${cfg.path}/carte_${UI.pad(r+1)}.jpg')"></div></div>`;
+            card.ondragstart = (e) => e.dataTransfer.setData("tID", e.target.id);
+            card.onclick = () => card.parentElement.classList.contains('drop-zone') && card.parentElement.id !== 'temp-card-slot' && card.classList.toggle('flipped');
+            slot.appendChild(card);
+            document.getElementById('btn-draw-time').disabled = true;
+        },
+        drawRandom(type) {
+            const cfg = CONFIG[type];
+            const cnt = document.getElementById(`${type}-card`); cnt.classList.remove('flipped');
+            let r = Math.floor(Math.random() * (cfg.end - cfg.start + 1)) + cfg.start;
+            if(r % 2 !== 0) r--;
+            document.getElementById(`${type === 'enjeu' ? 'enj' : 'sce'}-f`).style.backgroundImage = `url('${cfg.path}/carte_${UI.pad(r)}.jpg')`;
+            document.getElementById(`${type === 'enjeu' ? 'enj' : 'sce'}-b`).style.backgroundImage = `url('${cfg.path}/carte_${UI.pad(r+1)}.jpg')`;
         }
     };
-});
+
+    document.querySelectorAll('.drop-zone, #trash-zone').forEach(z => {
+        z.ondragover = (e) => { e.preventDefault(); z.classList.add('drag-over'); };
+        z.ondragleave = () => z.classList.remove('drag-over');
+        z.ondrop = (e) => {
+            e.preventDefault(); z.classList.remove('drag-over');
+            const card = document.getElementById(e.dataTransfer.getData("tID"));
+            if(!card) return;
+            if(z.id === 'trash-zone') { card.remove(); } 
+            else { if(z.children.length > 0 && z.id !== 'temp-card-slot') document.getElementById('temp-card-slot').appendChild(z.children[0]); z.appendChild(card); }
+            document.getElementById('btn-draw-time').disabled = (document.getElementById('temp-card-slot').children.length > 0);
+        };
+    });
 </script>
 </body>
 </html>
